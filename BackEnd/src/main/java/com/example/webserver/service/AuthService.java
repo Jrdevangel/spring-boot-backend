@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.webserver.exception.InvalidCredentialsException;
 import com.example.webserver.exception.UserNotFoundException;
 import java.util.Set;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Service
 public class AuthService {
@@ -40,9 +41,18 @@ public class AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
 
+        UserEntity user;
+
         try {
-            
-            authenticationManager.authenticate(
+                
+                user = userService.findByUsername(request.getUsername())
+                .orElseThrow(() -> new 
+                UserNotFoundException("User not found"));
+
+                BCryptPasswordEncoder encoder = new 
+                BCryptPasswordEncoder();
+                
+                authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
                             request.getPassword()
@@ -50,17 +60,12 @@ public class AuthService {
             );
 
         } catch (Exception e) {
+            e.printStackTrace();
 
             throw new InvalidCredentialsException(
                     "Invalid username or password"
             );
         }
-
-        UserEntity user = userService.findByUsername(request.getUsername())
-                .orElseThrow(() ->
-                new UserNotFoundException(
-                        "User not found"
-                ));
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         String accessToken = jwtService.generateToken(user.getUsername());

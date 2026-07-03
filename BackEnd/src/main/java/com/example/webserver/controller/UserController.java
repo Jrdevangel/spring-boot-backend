@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import com.example.webserver.dto.UpdateUserRequest;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -56,5 +61,28 @@ public class UserController {
             user.getUsername(),
             roles
         );
+    }
+
+    @PreAuthorize("@userAuthorizationService.canModifyUser(#username, authentication)")
+    @PutMapping("/{username}")
+    public UserProfileResponse updateUser(
+            @PathVariable String username,
+
+            @Valid 
+            @RequestBody UpdateUserRequest request
+        
+    ) {
+
+        UserEntity updatedUser = userService.updateUser(username, request);
+
+        Set<String> roles = updatedUser.getRoles()
+                .stream()
+                .map(role -> "ROLE_" + role.name())
+                .collect(java.util.stream.Collectors.toSet());
+
+        return new UserProfileResponse(
+                updatedUser.getUsername(),
+                roles
+            );
     }
 }

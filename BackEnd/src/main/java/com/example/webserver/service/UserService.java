@@ -1,5 +1,6 @@
 package com.example.webserver.service;
 
+import com.example.webserver.dto.UpdateUserRequest;
 import com.example.webserver.entity.UserEntity;
 import com.example.webserver.exception.UserNotFoundException;
 import com.example.webserver.repository.UserRepository;
@@ -41,4 +42,16 @@ public class UserService {
                 .orElseThrow(() -> 
                         new UserNotFoundException(username));
     }
+
+    public UserEntity updateUser(
+            String username,
+            UpdateUserRequest request
+    ) {
+
+        UserEntity user = getUserByUsername(username);
+
+        user.setEmail(request.email());
+
+        return userRepository.save(user);
+}
 }
