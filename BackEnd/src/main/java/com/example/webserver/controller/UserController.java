@@ -18,6 +18,8 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import org.springframework.security.core.GrantedAuthority;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -35,7 +37,7 @@ public class UserController {
 
         Set<String> roles = authentication.getAuthorities()
                 .stream()
-                .map(auth -> auth.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .collect(java.util.stream.Collectors.toSet());
 
         return new UserProfileResponse(
