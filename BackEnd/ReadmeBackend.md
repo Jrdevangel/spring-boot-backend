@@ -1,506 +1,191 @@
-Backend Module
+# Spring Boot Backend
 
-Spring Boot backend module implementing secure authentication, authorization, JWT session management, and role-based access control (RBAC).
+![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?logo=springboot&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-Build-C71A36?logo=apachemaven&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-Layered-orange)
+![Status](https://img.shields.io/badge/Status-Active-success)
 
-🚀 Current Features
+---
 
-The backend currently includes:
+A Spring Boot backend providing REST API infrastructure, JWT authentication, refresh token rotation, role-based and resource-based authorization, PostgreSQL persistence, and Docker-based deployment.
 
-Stateless JWT-based authentication
+## 🚀 Tech Stack
 
-Persistent refresh token management
+- Java 21
+- Spring Boot 3
+- Spring Security
+- JWT authentication
+- Refresh token rotation
+- Spring Data JPA and Hibernate
+- PostgreSQL
+- Maven
+- Docker and Docker Compose
+- Caddy reverse proxy
+- Nginx frontend
 
-Secure refresh token rotation strategy
+## 🏗 Architecture Overview
 
-Logout endpoint with refresh token revocation
+The backend follows a layered architecture:
 
-Token replay/reuse protection
+**Controller → Service → Repository → Database**
 
-Centralized HTTP exception handling
+Main components:
 
-DTO validation using Jakarta Validation
+- REST API endpoints
+- Stateless JWT authentication
+- Persistent refresh token management and rotation
+- Spring Security filter chain
+- Route-level and method-level authorization
+- Resource-based authorization (ABAC)
+- PostgreSQL persistence
+- Profile-based configuration
+- Dockerized infrastructure
+- Reverse proxy with Caddy
 
-Route-level authorization with Spring Security
+## 🖼 Infrastructure Overview
 
-Method-level authorization using @PreAuthorize
+The Docker environment is designed around the following services:
 
-Role-Based Access Control (RBAC)
+- **PostgreSQL:** relational database.
+- **Spring Boot Backend:** REST API and authentication services.
+- **Nginx Frontend:** static frontend serving.
+- **Caddy:** reverse proxy for HTTP/HTTPS traffic.
+- **Docker network:** communication between containerized services.
 
-Resource-based authorization (ABAC)
+The actual service configuration is defined in the Docker Compose configuration.
 
-Swagger/OpenAPI integration
+## 🔐 Authentication and Security
 
-Refresh token persistence with PostgreSQL
+Implemented authentication features include:
 
-Manual API verification using Postman
+- User registration and login
+- JWT access token generation
+- Refresh token generation and persistence
+- Refresh token rotation
+- Refresh token revocation on logout
+- Protection against refresh token reuse
+- BCrypt password hashing
+- Spring Security integration
+- Centralized exception handling
+- Request validation
 
-Spring Boot Actuator health endpoint
+Authorization includes:
 
-Profile-based configuration (dev / prod)
+- Role-Based Access Control (RBAC)
+- Route-level authorization
+- Method-level authorization
+- Resource-based authorization (ABAC)
 
-Environment variable secret externalization
+## 🔄 Database and Environment Profiles
 
-Swagger disabled in production
+The application uses profile-based configuration.
 
-Production-ready environment configuration
+### `dev` profile
 
-🧩 Module Structure
+Configured for local development:
 
-com.example.webserver
+- Connects to PostgreSQL.
+- Uses the `webserver_db` database.
+- Reads credentials from `DB_USERNAME` and `DB_PASSWORD`.
+- Uses Spring Data JPA and Hibernate.
+- Enables automatic schema updates with `ddl-auto: update`.
+- Enables SQL logging.
 
-├── config
-│   └── SecurityConfig.java
-├── controller
-│   ├── AuthController.java
-│   ├── UserController.java
-│   └── AdminController.java
-├── dto
-│   ├── LoginRequest.java
-│   ├── RegisterRequest.java
-│   ├── RefreshTokenRequest.java
-│   ├── LogoutRequest.java
-│   ├── AuthResponse.java
-│   └── UserProfileResponse.java
-├── entity
-│   ├── UserEntity.java
-│   ├── RefreshToken.java
-│   └── Role.java
-├── exception
-│   ├── GlobalExceptionHandler.java
-│   ├── InvalidCredentialsException.java
-│   ├── UserAlreadyExistException.java
-│   ├── UserNotFoundException.java
-│   ├── TokenExpiredException.java
-│   └── TokenReuseException.java
-├── repository
-│   ├── UserRepository.java
-│   └── RefreshTokenRepository.java
-├── security
-│   ├── JwtService.java
-│   ├── JwtAuthenticationFilter.java
-│   └── CustomUserDetailsService.java
-├── service
-│   ├── AuthService.java
-│   ├── UserService.java
-│   └── RefreshTokenService.java
-└── resources
+### `prod` profile
 
-🔐 Authentication & Authorization
+Configured for production-oriented deployment:
 
-JWT-Based Authentication
+- Uses externalized datasource configuration.
+- Uses externalized credentials and JWT secrets.
+- Uses `ddl-auto: validate`.
+- Disables SQL logging.
+- Disables Swagger/OpenAPI.
+- Disables SQL initialization.
 
-The system uses stateless authentication via JWT:
+The production profile is configured for Docker deployment through `SPRING_PROFILES_ACTIVE=prod`, as documented in the backend module.
 
-Access Tokens (short-lived)
+## 🧪 Running the Application
 
-Refresh Tokens (persistent and stored in PostgreSQL)
+Run Maven commands from the `BackEnd/` directory, where the Maven project is located, using an available Maven installation or the IDE's Maven integration.
 
-Authentication Flow
+### Development Mode
 
-Register / Login
-↓
-Access Token + Refresh Token
-│
-├── Access Token expires
-│          ↓
-│   POST /api/auth/refresh
-│          ↓
-│   New Access Token + New Refresh Token
-│
-└── POST /api/auth/logout
-↓
-Refresh Token revoked
-↓
-Future refresh blocked
-
-Refresh Token Strategy
-
-Refresh tokens are persisted in PostgreSQL
-
-Each refresh token has an expiration date
-
-Tokens are rotated on every refresh request
-
-Old refresh tokens are revoked
-
-Logout invalidates refresh tokens
-
-Reused, expired, or revoked refresh tokens trigger security exceptions
-
-This design mitigates replay attacks and improves session security.
-
-🛡 Role-Based Access Control (RBAC)
-
-The backend implements RBAC using Spring Security authorities.
-
-The authorization model combines route-level security with method-level authorization, both backed by Spring Security roles.
-
-Available Roles
-
-USER
-ADMIN
-
-Authority Mapping
-
-Roles are automatically mapped to Spring Security authorities:
-
-USER  → ROLE_USER
-ADMIN → ROLE_ADMIN
-
-via:
-
-SimpleGrantedAuthority(
-"ROLE_" + user.getRole().name()
-)
-
-Route-Level Authorization
-
-Configured in:
-
-SecurityConfig.java
-
-Protected routes:
-
-/api/user/**   → USER or ADMIN
-/api/admin/**  → ADMIN only
-
-Method-Level Authorization
-
-Method security is enabled using:
-
-@EnableMethodSecurity
-
-Example:
-
-@PreAuthorize("hasRole('ADMIN')")
-
-🔐 Resource-Based Authorization (ABAC)
-
-The backend also implements resource-based authorization for user resources.
-
-The authorization rules are enforced through UserAuthorizationService.
-
-Current policy:
-
-USER  → Can access and modify their own resource
-ADMIN → Can access and modify any user resource
-ADMIN → Can delete user resources
-ADMIN → Can manage user roles
-
-This complements RBAC by considering the relationship between the authenticated principal and the requested resource.
-
-🏗 Security Architecture
-
-Request
-│
-▼
-JwtAuthenticationFilter
-│
-▼
-SecurityContext
-│
-▼
-SecurityFilterChain
-(Route authorization)
-│
-▼
-@PreAuthorize
-(Method authorization)
-│
-▼
-UserAuthorizationService
-(Resource authorization / ABAC)
-│
-▼
-Controller
-
-🔄 Authentication Endpoints
-
-Method
-
-Endpoint
-
-Description
-
-POST
-
-/api/auth/register
-
-Register new user
-
-POST
-
-/api/auth/login
-
-Authenticate user
-
-POST
-
-/api/auth/refresh
-
-Refresh access token
-
-POST
-
-/api/auth/logout
-
-Revoke refresh token
-
-🧠 Security Layer
-
-JwtAuthenticationFilter
-
-The request authentication layer:
-
-Intercepts incoming requests
-
-Extracts JWT from Authorization header
-
-Validates JWT signature and expiration
-
-Loads authenticated user
-
-Injects user into Spring Security SecurityContext
-
-Authorization format:
-
-Authorization: Bearer <access_token>
-
-Public endpoints:
-
-/api/auth/register
-/api/auth/login
-/api/auth/refresh
-/swagger-ui/** (development only)
-/v3/api-docs/** (development only)
-/actuator/health
-
-All remaining endpoints require authentication.
-
-Authentication is performed by JwtAuthenticationFilter, while authorization is enforced by Spring Security through request matchers, method-level security annotations, and resource-based authorization.
-
-🗄 Database Configuration
-
-The backend uses PostgreSQL with Spring Data JPA.
-
-Current setup:
-
-PostgreSQL database
-
-Profile-based Hibernate configuration
-
-ddl-auto=update (development)
-
-ddl-auto=validate (production)
-
-Automatic entity-to-table mapping
-
-Environment variable support for credentials
-
-Managed via:
-
-application.yml
-
-🐳 Docker Setup
-
-Start infrastructure:
-
-docker compose up -d
-
-🐳 Docker Hardening
-
-The Docker environment includes:
-
-PostgreSQL healthcheck
-
-Ordered startup using depends_on + service_healthy
-
-Environment variable-based secrets
-
-Persistent Docker volumes
-
-Production profile activation
-
-Health validation:
-
-`pg_isready` -U ${DB_USERNAME} -d webserver_db
-
-This guarantees PostgreSQL readiness before backend startup.
-
-Services:
-
-PostgreSQL database
-
-Spring Boot backend
-
-Frontend application
-
-Caddy reverse proxy
-
-⚠️ Local Development Warning
-
-Do not run the Dockerized backend and local Spring Boot simultaneously.
-
-Both use:
-
-Port 8080
-
-Running both causes:
-
-Port 8080 was already in use
-
-✅ API Verification
-
-The backend has been manually verified using Postman.
-
-Validated flows:
-
-Register
-
-Login
-
-JWT authentication
-
-Refresh token persistence
-
-Refresh token rotation
-
-Logout token revocation
-
-RBAC (USER vs ADMIN)
-
-Resource ownership authorization (ABAC)
-
-Protected endpoints
-
-JWT authorization via Bearer token
-
-📈 Architectural Maturity
-
-Authentication
-
-JWT
-
-Refresh Tokens
-
-BCRYPT
-
-Authorization
-
-RBAC
-
-Resource ownership authorization (ABAC)
-
-Route-level authorization
-
-Method-level authorization
-
-Reliability
-
-Global exception handling
-
-DTO validation
-
-Infrastructure
-
-PostgreSQL
-
-Docker
-
-Profiles
-
-Actuator
-
-⚙️ Environment Profiles
-
-The backend uses profile-based configuration.
-
-Shared Configuration
-
-application.yml
-
-Contains common configuration:
-
-JWT configuration
-
-Shared JPA settings
-
-open-in-view=false
-
-Development Profile
-
-application-dev.yml
-
-Used for local development:
-
-PostgreSQL local database
-
-ddl-auto=update
-
-SQL logs enabled
-
-Run:
-
+```bash
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
 
-Production Profile
+### Production Profile
 
-application-prod.yml
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=prod
+```
 
-Used for Docker/production deployments:
+The production profile requires its corresponding environment variables and datasource configuration. For local development, use the `dev` profile.
 
-Externalized datasource
+## 🐳 Docker Setup
 
-Externalized JWT secret
+### 1. Configure environment variables
 
-ddl-auto=validate
+Create a `.env` file based on `.env.example`, if provided by the repository.
 
-SQL logging disabled
+Example variable names:
 
-Swagger/OpenAPI disabled
-
-SQL initialization disabled
-
-Activated automatically in Docker:
-
-SPRING_PROFILES_ACTIVE=prod
-
-🔐 Environment Variables
-
-Sensitive values are externalized and never committed to Git.
-
-Required variables:
-
-DB_URL=JDBC:postgresql://localhost:5432/webserver_db
+```dotenv
+POSTGRES_PASSWORD=your_secure_password
+DB_URL=your_database_jdbc_url
 DB_USERNAME=your_db_username
 DB_PASSWORD=your_db_password
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=your_base64_secret
+```
 
-The repository includes:
+The required variables and their values must match the application configuration and Docker Compose setup.
 
-.env.example
+**Security:** Do not commit real credentials, database passwords, or JWT secrets to Git.
 
-for secure environment setup.
+### 2. Start the environment
 
-📊 Observability
+From the directory containing the applicable Compose file, run:
 
-Only the health endpoint is publicly exposed.
-All remaining Actuator endpoints require authentication or remain disabled.
+```bash
+docker compose up --build
+```
 
-Available endpoint:
+The configured environment includes the PostgreSQL database, Spring Boot backend, frontend, and Caddy reverse proxy.
 
-/actuator/health
+### 3. Stop the environment
 
-Used for:
+Stop and remove containers and networks without deleting persistent volumes:
 
-Health monitoring
+```bash
+docker compose down
+```
 
-Infrastructure readiness checks
+**Warning:** `docker compose down -v` also removes declared volumes. This can permanently delete persisted database data. Use it only when you intentionally want to remove that data.
 
-Container orchestration probes
+## 📌 Current Status
 
-Current exposure:
+The backend documentation describes the following implemented capabilities:
 
-/actuator/health → public access
+- JWT authentication
+- Persistent refresh tokens and token rotation
+- Refresh token revocation and reuse protection
+- Stateless Spring Security configuration
+- RBAC and resource-based authorization
+- PostgreSQL persistence
+- Externalized configuration and secrets
+- Docker-based infrastructure
+- Caddy reverse proxy
+- Spring Boot Actuator health endpoint
+- Swagger/OpenAPI integration, disabled in production
 
-All remaining actuator endpoints remain restricted.
+## 🔜 Next Improvements
+
+- HTTPS production deployment
+- CI/CD pipeline
+- Unit and integration testing
+- Monitoring and observability
+
+---
+
+This project demonstrates the development of a Spring Boot backend with secure authentication, authorization, relational persistence, and containerized infrastructure.

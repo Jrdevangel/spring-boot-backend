@@ -18,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.webserver.exception.InvalidCredentialsException;
 import com.example.webserver.exception.UserNotFoundException;
 import java.util.Set;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @Service
 public class AuthService {
@@ -49,9 +48,6 @@ public class AuthService {
                 .orElseThrow(() -> new 
                 UserNotFoundException("User not found"));
 
-                BCryptPasswordEncoder encoder = new 
-                BCryptPasswordEncoder();
-                
                 authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsername(),
@@ -60,8 +56,6 @@ public class AuthService {
             );
 
         } catch (Exception e) {
-            e.printStackTrace();
-
             throw new InvalidCredentialsException(
                     "Invalid username or password"
             );

@@ -45,4 +45,18 @@ public ResponseEntity<ApiErrorResponse> handleValidationException(
                 .status(HttpStatus.FORBIDDEN)
                 .body(response);
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException ex) {
+
+        ApiErrorResponse response = new ApiErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                "Invalid credentials"
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
 }

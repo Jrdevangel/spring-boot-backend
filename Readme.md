@@ -1,203 +1,191 @@
-# WebServer Project
+# Spring Boot Backend
 
-![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?logo=springboot&logoColor=white)
-![Maven](https://img.shields.io/badge/Maven-Build-C71A36?logo=apachemaven&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-Profile--Based-orange)
+![Java](https://img.shields.io/badge/Java-21-007396?logo=openjdk\&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?logo=springboot\&logoColor=white)
+![Maven](https://img.shields.io/badge/Maven-Build-C71A36?logo=apachemaven\&logoColor=white)
+![Architecture](https://img.shields.io/badge/Architecture-Layered-orange)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
 ---
 
-Backend-oriented web infrastructure built with Spring Boot using JWT authentication, refresh token rotation, profile-based persistence, and a fully Dockerized environment.
-
----
+A Spring Boot backend providing REST API infrastructure, JWT authentication, refresh token rotation, role-based and resource-based authorization, PostgreSQL persistence, and Docker-based deployment.
 
 ## 🚀 Tech Stack
 
 * Java 21
 * Spring Boot 3
 * Spring Security
-* JWT Authentication
-* Refresh Token Rotation
-* Spring Data JPA
+* JWT authentication
+* Refresh token rotation
+* Spring Data JPA and Hibernate
 * PostgreSQL
 * Maven
-* Docker
-* Caddy
-* Nginx
+* Docker and Docker Compose
+* Caddy reverse proxy
+* Nginx frontend
 
----
+## 🏗 Architecture Overview
 
-# 🏗 Architecture Overview
+The backend follows a layered architecture:
 
-The project follows a layered architecture:
+**Controller → Service → Repository → Database**
 
-Controller → Service → Repository → Database
+Main components:
 
-Main backend components:
-
+* REST API endpoints
 * Stateless JWT authentication
-* Refresh token persistence and rotation
+* Persistent refresh token management and rotation
 * Spring Security filter chain
-* Profile-based repository strategy
+* Route-level and method-level authorization
+* Resource-based authorization (ABAC)
+* PostgreSQL persistence
+* Profile-based configuration
 * Dockerized infrastructure
 * Reverse proxy with Caddy
 
----
+## 🖼 Infrastructure Overview
 
-# 🖼 Architecture Diagram
+The Docker environment is designed around the following services:
 
-![WebServer Architecture](./a_flowchart_digital_illustration_of_a_docker_based.png)
+* **PostgreSQL:** relational database.
+* **Spring Boot Backend:** REST API and authentication services.
+* **Nginx Frontend:** static frontend serving.
+* **Caddy:** reverse proxy for HTTP/HTTPS traffic.
+* **Docker network:** communication between containerized services.
 
-Docker stack components:
+The actual service configuration is defined in the Docker Compose configuration.
 
-* **PostgreSQL** → database container
-* **Spring Boot Backend** → REST API + authentication
-* **Nginx Frontend** → static frontend serving
-* **Caddy** → reverse proxy handling HTTP/HTTPS
-* Shared Docker bridge network between services
+## 🔐 Authentication and Security
 
----
+Implemented authentication features include:
 
-# 🔐 Authentication System
-
-Implemented authentication features:
-
-* User registration
-* User login
+* User registration and login
 * JWT access token generation
-* Refresh token generation
+* Refresh token generation and persistence
 * Refresh token rotation
-* Stateless authentication
+* Refresh token revocation on logout
+* Protection against refresh token reuse
+* BCrypt password hashing
 * Spring Security integration
-* BCrypt password encryption
+* Centralized exception handling
+* Request validation
 
-Main security components:
+Authorization includes:
 
-* `JwtService`
-* `JwtAuthenticationFilter`
-* `SecurityConfig`
-* `CustomUserDetailsService`
-* `AuthService`
+* Role-Based Access Control (RBAC)
+* Route-level authorization
+* Method-level authorization
+* Resource-based authorization (ABAC)
 
----
+## 🔄 Database and Environment Profiles
 
-# 🔄 Profile-Based Repository Strategy
+The application uses profile-based configuration.
 
-Two persistence strategies are available:
+### `dev` profile
 
-## `dev` profile
+Configured for local development:
 
-* Uses in-memory persistence
-* No external database required
-* Faster startup for development
+* Connects to PostgreSQL.
+* Uses the `webserver_db` database.
+* Reads credentials from `DB_USERNAME` and `DB_PASSWORD`.
+* Uses Spring Data JPA and Hibernate.
+* Enables automatic schema updates with `ddl-auto: update`.
+* Enables SQL logging.
 
-## `db` profile
+### `prod` profile
 
-* Uses PostgreSQL persistence
-* Full JPA integration
-* Production-oriented environment
+Configured for production-oriented deployment:
 
-Activate profile:
+* Uses externalized datasource configuration.
+* Uses externalized credentials and JWT secrets.
+* Uses `ddl-auto: validate`.
+* Disables SQL logging.
+* Disables Swagger/OpenAPI.
+* Disables SQL initialization.
+
+The production profile is configured for Docker deployment through `SPRING_PROFILES_ACTIVE=prod`, as documented in the backend module.
+
+## 🧪 Running the Application
+
+Run Maven commands from the `BackEnd/` directory, where the Maven project is located, using an available Maven installation or the IDE's Maven integration.
+
+### Development Mode
 
 ```bash
--Dspring.profiles.active=dev
-
-or
-
--Dspring.profiles.active=db
-
-```
----
-
-# 📦 Repository Layer
-
-# UserRepository
-
-Domain abstraction defining persistence operations.
-
-# InMemoryUserRepository
-
-* Activated with @Profile("dev")
-* Stores users in memory
-* Provides lightweight authentication support
-
-# JpaUserRepository
-
-* Activated with @Profile("db")
-* Extends Spring Data JPA
-* Persists users in PostgreSQL
-
----
-
-# 🧪 Running the Application
-
-# Development Mode
-
-```
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
 ```
 
-# Database Mode
+### Production Profile
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=prod
 ```
-mvn spring-boot:run -Dspring-boot.run.profiles=db
-````
 
---- 
+The production profile requires its corresponding environment variables and datasource configuration. For local development, use the `dev` profile.
 
-# 🐳 Docker & Caddy Setup
+## 🐳 Docker Setup
 
-# 1. Create a .env file
+### 1. Configure environment variables
 
-```
+Create a `.env` file based on `.env.example`, if provided by the repository.
+
+Example variable names:
+
+```dotenv
 POSTGRES_PASSWORD=your_secure_password
+DB_URL=your_database_jdbc_url
+DB_USERNAME=your_db_username
+DB_PASSWORD=your_db_password
 JWT_SECRET=your_base64_secret
 ```
 
-```.env``` is ignored by Git security reasons.
+The required variables and their values must match the application configuration and Docker Compose setup.
 
----
+**Security:** Do not commit real credentials, database passwords, or JWT secrets to Git.
 
-# 2. Start the full stack
+### 2. Start the environment
 
-```docker compose up --build```
+From the directory containing the applicable Compose file, run:
 
-Services started:
-* PostgreSQL
-* Spring Boot backend
-* Nginx frontend
+```bash
+docker compose up --build
+```
+
+The configured environment includes the PostgreSQL database, Spring Boot backend, frontend, and Caddy reverse proxy.
+
+### 3. Stop the environment
+
+Stop and remove containers and networks without deleting persistent volumes:
+
+```bash
+docker compose down
+```
+
+**Warning:** `docker compose down -v` also removes declared volumes. This can permanently delete persisted database data. Use it only when you intentionally want to remove that data.
+
+## 📌 Current Status
+
+The backend documentation describes the following implemented capabilities:
+
+* JWT authentication
+* Persistent refresh tokens and token rotation
+* Refresh token revocation and reuse protection
+* Stateless Spring Security configuration
+* RBAC and resource-based authorization
+* PostgreSQL persistence
+* Externalized configuration and secrets
+* Docker-based infrastructure
 * Caddy reverse proxy
+* Spring Boot Actuator health endpoint
+* Swagger/OpenAPI integration, disabled in production
+
+## 🔜 Next Improvements
+
+* HTTPS production deployment
+* CI/CD pipeline
+* Unit and integration testing
+* Monitoring and observability
 
 ---
 
-# 3. Stop and remove containers and volumes
-
-```docker compose down -v````
-
----
-
-# 📌 Current Status
-
-* JWT authentication implemented
-* Refresh token rotation implemented
-* Stateless Spring Security configured
-* Dockerized PostgreSQL environment
-* Environment variable secret management
-* Backend and frontend connected through Docker network
-* Reverse proxy configured with Caddy
-* Production-oriented backend structure established
-
----
-
-# 🔜 Next Improvements
-
-Role-based authorization
-HTTPS production deployment
-CI/CD pipeline
-Unit and integration testing
-Monitoring and observability
-API documentation with Swagger/OpenAPI
-
----
-
-This project demonstrates the evolution from a basic Spring Boot backend into a more production-oriented backend infrastructure with secure authentication, Docker orchestration, and scalable architecture principles.
+This project demonstrates the development of a Spring Boot backend with secure authentication, authorization, relational persistence, and containerized infrastructure.
