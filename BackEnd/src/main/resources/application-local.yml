@@ -16,8 +16,8 @@ spring:
 app:
   security:
     admin:
-      username: admin
-      password: admin123
+      username: ${APP_ADMIN_USER}
+      password: ${APP_ADMIN_PASSWORD}
 
 logging:
   level:
